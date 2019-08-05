@@ -1,0 +1,75 @@
+---
+- name: Make sure font config is avialable
+  package:
+    name: fontconfig
+    state: present
+
+- name: Create Download directory
+  file:
+    path: /tmp/jira
+    state: directory
+
+- name: Download Jira
+  command: "wget -cq -O /tmp/jira/jira-installer.bin https://www.atlassian.com/software/jira/downloads/binary/atlassian-jira-software-{{ jira_version }}-x64.bin"
+
+- name: Make installer executable
+  file:
+    path: /tmp/jira/jira-installer.bin
+    state: file
+    mode: a+x
+
+- name: Copy response file for unattended install
+  template:
+    src: response.varfile.j2
+    dest: /tmp/jira/response.varfile
+
+- name: Execute installer
+  command: "/tmp/jira/jira-installer.bin -q -varfile response.varfile"
+
+- name: Link jira to current installation
+  file:
+    src: /opt/atlassian/jira-v{{ jira_version }}
+    dest: /opt/atlassian/jira
+    state: link
+    force: yes
+
+- name: Configure Tomcat
+  template:
+    src: server.xml.j2
+    dest: /opt/atlassian/jira-v{{ jira_version }}/conf/server.xml
+
+- name: Configure firewall
+  firewalld:
+    service: "{{ item }}"
+    permanent: yes
+    state: enabled
+  with_items:
+    - http
+    - https
+    - ssh
+  notify: Restart firewalld
+
+- name: Make jira avialable as a service
+  copy:
+    src: jira.service
+    dest:  /etc/systemd/system/jira.serivce
+    owner: root
+    group: root
+
+- name: Enable Jira
+  systemd:
+    name: jira
+    enabled: yes
+    state: started
+    daemon_reload: yes
+
+- name: Copy nginx config
+  template:
+    src: nginx_jira.conf
+    dest: "{{ nginx_sites_path }}/jira_nginx.conf"
+
+- name: Conclude installation process
+  debug:
+    msg:
+    - "Installation on {{ ansible_nodename }} completed."
+    - "To configure and setting up this Jira installation, got to {{ jira_base_url }}"

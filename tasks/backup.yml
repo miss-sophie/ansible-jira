@@ -1,0 +1,12 @@
+---
+- name: Stop jira
+  systemd:
+    name: jira
+    state: stopped
+
+- name: Create postgres dump
+  shell: pg_dump jiradb >> /tmp/jira_dump_{{ ansible_date_time.epoch }}
+  args:
+    executable: /bin/bash
+    creates: /tmp/jira_dump_{{ ansible_date_time.epoch }}
+  become_user: postgres

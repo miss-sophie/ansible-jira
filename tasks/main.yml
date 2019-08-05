@@ -1,0 +1,13 @@
+---
+- name: Discover existing jira application
+  stat:
+    path: /opt/atlassian/jira
+  register: jira_exists
+  changed_when: False
+
+- name: Backup existing Jira installation
+  include_tasks: backup.yml
+  when: jira_exists.stat.exists
+
+- name: Install jira
+  include_tasks: install.yml

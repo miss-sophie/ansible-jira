@@ -1,0 +1,16 @@
+[Unit]
+Description=Jira
+After=network.target
+
+[Service]
+Type=forking
+User=jira4
+PIDFile=/opt/atlassian/jira/work/catalina.pid
+ExecStart=/opt/atlassian/jira/bin/start-jira.sh
+ExecStop=/opt/atlassian/jira/bin/stop-jira.sh
+TimeoutSec=200
+LimitNOFILE=4096
+LimitNPROC=4096
+
+[Install]
+WantedBy=multi-user.target
