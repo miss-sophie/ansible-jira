@@ -1,0 +1,4 @@
+---
+- src: https://github.com/miss-sophie/ansible-nginx
+  version: master
+  name: nginx
